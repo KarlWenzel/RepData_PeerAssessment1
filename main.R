@@ -1,45 +1,26 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## Loading and preprocessing the data
-
-```{r loading}
 library(ggplot2)
 library(plyr)
+
+# Close any currently open images; reset par() values for graphics device
+if (dev.cur() > 1) dev.off()
 
 # Obtain data from https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip
 # After downloading, unzip and copy extracted file (activity.csv) to local directory.
 
-df.RAW <- read.csv("activity.csv")
-str(df.RAW)
-```
+if( !exists("df.RAW") ) {
+  df.RAW <- read.csv("activity.csv") # Give us a 3-tuple: steps, date, interval
+}
 
-## What is mean total number of steps taken per day?
-
-```{r steps_per_day}
 # Determine steps per day
 df.SPD <- ddply(df.RAW, .(date), summarize, steps=sum(steps, na.rm=TRUE))
 
 # Display steps as a histogram 
-p <- ggplot(data=df.SPD) + geom_histogram(aes(steps), bins=nrow(df.SPD)) 
-p <- p + ggtitle("Histogram for Steps per Day") 
+p <- ggplot(df.SPD) + geom_histogram(aes(steps), bins=nrow(df.SPD)) + ggtitle("Histogram for Steps per Day") 
 print(p)
 
 # Display mean and median, plus additional summary data of steps taken per day
 print( summary(df.SPD$steps) )
-```
 
-## What is the average daily activity pattern?
-
-```{r daily_pattern}
 # Determine average steps taken every day by 5-minute time intervals
 df.SPI <- ddply(df.RAW, .(interval), summarize, msteps=mean(steps, na.rm=TRUE))
 
@@ -50,11 +31,7 @@ print(p)
 # Which interval has the maximum number of average steps?
 i <- with(df.SPI, which(msteps == max(msteps)))
 print(df.SPI[i, ])
-```
 
-## Imputing missing values
-
-```{r impute}
 # How many records in our data set contain NAs?
 print( sum(is.na(df.RAW)) )
 
@@ -73,17 +50,7 @@ print(p)
 
 # Display mean and median, plus additional summary data of steps taken per day
 print( summary(df.SPD2$steps) )
-```
 
-Some observations regarding the impact of imputing missing data on the estimates of the total daily number of steps:
-
-- The mean number of steps increased
-- The median number of steps increased
-- The histogram no longer represents zero steps as heavily, and is more centrally aligned
-
-## Are there differences in activity patterns between weekdays and weekends?
-
-```{r weekdays}
 # Create and assign factor for weekday vs. weekend
 df.IMP$weekday <- weekdays(as.Date(df.IMP$date))
 df.IMP$dayType <- ifelse( df.IMP$weekday %in% c("Saturday","Sunday"), "weekend", "weekday" )
@@ -96,4 +63,8 @@ df.SPI2 <- ddply(df.IMP, .(interval, dayType), summarize, msteps=mean(steps))
 p <- ggplot(df.SPI2, aes(interval, msteps)) + geom_line() + facet_grid(. ~ dayType)
 p <- p + ggtitle("Time Series Steps per Interval")
 print(p)
-```
+
+
+
+
+

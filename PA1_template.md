@@ -1,17 +1,11 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ## Loading and preprocessing the data
 
-```{r loading}
+
+```r
 library(ggplot2)
 library(plyr)
 
@@ -22,9 +16,17 @@ df.RAW <- read.csv("activity.csv")
 str(df.RAW)
 ```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 ## What is mean total number of steps taken per day?
 
-```{r steps_per_day}
+
+```r
 # Determine steps per day
 df.SPD <- ddply(df.RAW, .(date), summarize, steps=sum(steps, na.rm=TRUE))
 
@@ -32,32 +34,58 @@ df.SPD <- ddply(df.RAW, .(date), summarize, steps=sum(steps, na.rm=TRUE))
 p <- ggplot(data=df.SPD) + geom_histogram(aes(steps), bins=nrow(df.SPD)) 
 p <- p + ggtitle("Histogram for Steps per Day") 
 print(p)
+```
 
+![](PA1_template_files/figure-html/steps_per_day-1.png)
+
+```r
 # Display mean and median, plus additional summary data of steps taken per day
 print( summary(df.SPD$steps) )
 ```
 
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0    6778   10400    9354   12810   21190
+```
+
 ## What is the average daily activity pattern?
 
-```{r daily_pattern}
+
+```r
 # Determine average steps taken every day by 5-minute time intervals
 df.SPI <- ddply(df.RAW, .(interval), summarize, msteps=mean(steps, na.rm=TRUE))
 
 # Display a time series plot
 p <- ggplot(df.SPI, aes(interval, msteps)) + geom_line() + ggtitle("Time Series Steps per Interval")
 print(p)
+```
 
+![](PA1_template_files/figure-html/daily_pattern-1.png)
+
+```r
 # Which interval has the maximum number of average steps?
 i <- with(df.SPI, which(msteps == max(msteps)))
 print(df.SPI[i, ])
 ```
 
+```
+##     interval   msteps
+## 104      835 206.1698
+```
+
 ## Imputing missing values
 
-```{r impute}
+
+```r
 # How many records in our data set contain NAs?
 print( sum(is.na(df.RAW)) )
+```
 
+```
+## [1] 2304
+```
+
+```r
 # Create new data set with imputed values replacing NA values
 df.IMP <- join(df.RAW, df.SPI, by="interval")
 naFilter <- is.na(df.IMP)
@@ -70,9 +98,18 @@ df.SPD2 <- ddply(df.IMP, .(date), summarize, steps=sum(steps))
 p <- ggplot(data=df.SPD2) + geom_histogram(aes(steps), bins=nrow(df.SPD2))
 p <- p + ggtitle("Histogram for Imputed Steps per Day") 
 print(p)
+```
 
+![](PA1_template_files/figure-html/impute-1.png)
+
+```r
 # Display mean and median, plus additional summary data of steps taken per day
 print( summary(df.SPD2$steps) )
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10770   10770   12810   21190
 ```
 
 Some observations regarding the impact of imputing missing data on the estimates of the total daily number of steps:
@@ -83,7 +120,8 @@ Some observations regarding the impact of imputing missing data on the estimates
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r weekdays}
+
+```r
 # Create and assign factor for weekday vs. weekend
 df.IMP$weekday <- weekdays(as.Date(df.IMP$date))
 df.IMP$dayType <- ifelse( df.IMP$weekday %in% c("Saturday","Sunday"), "weekend", "weekday" )
@@ -97,3 +135,5 @@ p <- ggplot(df.SPI2, aes(interval, msteps)) + geom_line() + facet_grid(. ~ dayTy
 p <- p + ggtitle("Time Series Steps per Interval")
 print(p)
 ```
+
+![](PA1_template_files/figure-html/weekdays-1.png)
